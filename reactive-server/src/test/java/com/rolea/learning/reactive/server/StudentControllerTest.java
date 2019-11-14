@@ -1,12 +1,15 @@
 package com.rolea.learning.reactive.server;
 
+import com.rolea.learning.reactive.server.config.ServerConfig;
 import com.rolea.learning.reactive.server.model.Student;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 @WebFluxTest
+@Import(value = {ServerConfig.class})
 public class StudentControllerTest {
 
 	@Autowired

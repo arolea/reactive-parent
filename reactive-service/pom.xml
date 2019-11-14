@@ -9,12 +9,12 @@
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>reactive-client</artifactId>
+	<artifactId>reactive-service</artifactId>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.rolea.learning</groupId>
-			<artifactId>reactive-model</artifactId>
+			<artifactId>model</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 
@@ -23,4 +23,5 @@
 			<artifactId>spring-boot-starter-webflux</artifactId>
 		</dependency>
 	</dependencies>
+
 </project>

@@ -24,6 +24,14 @@ public class StudentControllerTest {
 	}
 
 	@Test
+	public void getStudent_error() {
+		webClient.get()
+				.uri("/students/{id}", 10)
+				.exchange().expectStatus().isNotFound()
+				.expectBody(String.class).isEqualTo("Student with id 10 does not exist");
+	}
+
+	@Test
 	public void getStudents_ok() {
 		webClient.get()
 				.uri("/students")

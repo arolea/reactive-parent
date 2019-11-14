@@ -20,7 +20,7 @@ public class ReactiveClient implements CommandLineRunner {
 	@Autowired
 	private WebClient webClient;
 
-	private static final int ASYNC_PROCESS_COUNT = 2;
+	private static final int ASYNC_PROCESS_COUNT = 3;
 	private static final CountDownLatch ASYNC_LATCH = new CountDownLatch(ASYNC_PROCESS_COUNT);
 	private static final Logger LOGGER = LoggerFactory.getLogger(ReactiveClient.class);
 
@@ -32,20 +32,39 @@ public class ReactiveClient implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		consumeMono();
+		consumeMonoSuccess();
+		consumeMonoError();
 		consumeFlux();
 		ASYNC_LATCH.await();
 	}
 
-	private void consumeMono() {
-		LOGGER.info("Invoking mono endpoint");
+	private void consumeMonoSuccess() {
+		LOGGER.info("Invoking mono endpoint with valid id");
 		Mono<Student> studentMono = webClient.get()
-				.uri("/students/{id}", "1")
+				.uri("/students/{id}", 1)
 				.retrieve()
 				.bodyToMono(Student.class);
 		studentMono.subscribe(
 				student -> LOGGER.info("Received student with id {}", student.getId()),
-				exception -> LOGGER.error("Exception detected", exception),
+				exception -> {
+					LOGGER.error("Exception detected", exception);
+					ASYNC_LATCH.countDown();
+				},
+				ASYNC_LATCH::countDown);
+	}
+
+	private void consumeMonoError() {
+		LOGGER.info("Invoking mono endpoint with invalid id");
+		Mono<Student> studentMono = webClient.get()
+				.uri("/students/{id}", 10)
+				.retrieve()
+				.bodyToMono(Student.class);
+		studentMono.subscribe(
+				student -> LOGGER.info("Received student with id {}", student.getId()),
+				exception -> {
+					LOGGER.error("Exception detected", exception);
+					ASYNC_LATCH.countDown();
+				},
 				ASYNC_LATCH::countDown);
 	}
 
@@ -57,7 +76,10 @@ public class ReactiveClient implements CommandLineRunner {
 				.bodyToFlux(Student.class);
 		studentFlux.subscribe(
 				student -> LOGGER.info("Received student with id {}", student.getId()),
-				exception -> LOGGER.error("Exception detected", exception),
+				exception -> {
+					LOGGER.error("Exception detected", exception);
+					ASYNC_LATCH.countDown();
+				},
 				ASYNC_LATCH::countDown
 		);
 	}

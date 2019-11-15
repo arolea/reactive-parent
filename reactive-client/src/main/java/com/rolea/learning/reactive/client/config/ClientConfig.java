@@ -10,12 +10,20 @@ import org.springframework.web.reactive.function.client.WebClient;
 @PropertySource(value = {"classpath:client-config.properties"})
 public class ClientConfig {
 
-	@Value("${server.url}")
-	private String serverUrl;
+	@Value("${annotation.server.url}")
+	private String annotationServerUrl;
 
-	@Bean
-	public WebClient webClient(){
-		return WebClient.create(serverUrl);
+	@Value("${functional.server.url}")
+	private String functionalServerUrl;
+
+	@Bean("annotationClient")
+	public WebClient annotationClient(){
+		return WebClient.create(annotationServerUrl);
+	}
+
+	@Bean("functionalClient")
+	public WebClient functionalClient(){
+		return WebClient.create(functionalServerUrl);
 	}
 
 }

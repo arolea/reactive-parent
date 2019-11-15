@@ -41,7 +41,14 @@ public class StudentServiceImpl implements StudentService {
 	@Override
 	public Flux<Student> findAll() {
 		return Flux.fromIterable(studentMap.values())
-				.zipWith(Flux.interval(ofMillis(2000)))
+				.zipWith(Flux.interval(ofMillis(1000)))
 				.map(Tuple2::getT1);
 	}
+
+	@Override
+	public Mono<Student> save(Student student) {
+		studentMap.put(student.getId(), student);
+		return Mono.just(student);
+	}
+
 }

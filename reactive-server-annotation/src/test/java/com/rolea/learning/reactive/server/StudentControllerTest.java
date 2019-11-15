@@ -1,23 +1,26 @@
 package com.rolea.learning.reactive.server;
 
-import com.rolea.learning.reactive.server.config.ServerConfig;
 import com.rolea.learning.reactive.server.model.Student;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.reactive.function.BodyInserters;
 
-@WebFluxTest
-@Import(value = {ServerConfig.class})
+import java.time.Duration;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureWebTestClient(timeout = "10000")//10 seconds
 public class StudentControllerTest {
 
 	@Autowired
-	private WebTestClient webClient;
+	private WebTestClient webTestClient;
 
 	@Test
 	public void getStudent_ok() {
-		webClient.get()
+		webTestClient.get()
 				.uri("/students/{id}", 1)
 				.exchange().expectStatus().isOk()
 				.expectBody(Student.class).isEqualTo(Student.builder().id(1L).name("Foo").build());
@@ -25,7 +28,7 @@ public class StudentControllerTest {
 
 	@Test
 	public void getStudent_error() {
-		webClient.get()
+		webTestClient.get()
 				.uri("/students/{id}", 10)
 				.exchange().expectStatus().isNotFound()
 				.expectBody(String.class).isEqualTo("Student with id 10 does not exist");
@@ -33,13 +36,27 @@ public class StudentControllerTest {
 
 	@Test
 	public void getStudents_ok() {
-		webClient.get()
+		webTestClient.get()
 				.uri("/students")
 				.exchange().expectStatus().isOk()
 				.expectBodyList(Student.class).contains(
 				Student.builder().id(1L).name("Foo").build(),
 				Student.builder().id(2L).name("Bar").build(),
 				Student.builder().id(3L).name("Baz").build()
+		);
+	}
+
+	@Test
+	public void createStudent_ok(){
+		Student student = Student.builder()
+				.id(4L)
+				.name("Buz")
+				.build();
+		webTestClient.post()
+				.uri("/students")
+				.body(BodyInserters.fromValue(student))
+				.exchange().expectStatus().isOk()
+				.expectBody(Student.class).isEqualTo(Student.builder().id(4L).name("Buz").build()
 		);
 	}
 

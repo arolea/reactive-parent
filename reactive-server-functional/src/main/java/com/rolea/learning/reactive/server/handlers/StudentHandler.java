@@ -38,4 +38,10 @@ public class StudentHandler {
 				.body(studentService.findAll(), Student.class);
 	}
 
+	public Mono<ServerResponse> createStudent(ServerRequest request){
+		Mono<Student> studentMono = request.bodyToMono(Student.class).doOnNext(student -> studentService.save(student));
+		return ok()
+				.body(BodyInserters.fromPublisher(studentMono, Student.class));
+	}
+
 }

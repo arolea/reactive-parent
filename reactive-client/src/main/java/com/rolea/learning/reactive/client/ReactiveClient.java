@@ -9,6 +9,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -26,7 +27,7 @@ public class ReactiveClient implements CommandLineRunner {
 	@Qualifier("functionalClient")
 	private WebClient functionalClient;
 
-	private static final int ASYNC_PROCESS_COUNT = 6;
+	private static final int ASYNC_PROCESS_COUNT = 8;
 	private static final CountDownLatch ASYNC_LATCH = new CountDownLatch(ASYNC_PROCESS_COUNT);
 	private static final Logger LOGGER = LoggerFactory.getLogger(ReactiveClient.class);
 
@@ -39,24 +40,27 @@ public class ReactiveClient implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 		LOGGER.info("Consuming annotation server");
-		consumeMonoSuccess(annotationClient);
-		consumeMonoError(annotationClient);
-		consumeFlux(annotationClient);
+		findStudentSuccess(annotationClient);
+		findStudentError(annotationClient);
+		createStudent(annotationClient);
+		findStudents(annotationClient);
 
 		LOGGER.info("Consuming functional server");
-		consumeMonoSuccess(functionalClient);
-		consumeMonoError(functionalClient);
-		consumeFlux(functionalClient);
+		findStudentSuccess(functionalClient);
+		findStudentError(functionalClient);
+		createStudent(functionalClient);
+		findStudents(functionalClient);
 
 		ASYNC_LATCH.await();
 	}
 
-	private void consumeMonoSuccess(WebClient annotationClient) {
+	private void findStudentSuccess(WebClient webClient) {
 		LOGGER.info("Invoking mono endpoint with valid id");
-		Mono<Student> studentMono = annotationClient.get()
+		Mono<Student> studentMono = webClient.get()
 				.uri("/students/{id}", 1)
 				.retrieve()
 				.bodyToMono(Student.class);
+
 		studentMono.subscribe(
 				student -> LOGGER.info("Received student with id {}", student.getId()),
 				exception -> {
@@ -66,12 +70,13 @@ public class ReactiveClient implements CommandLineRunner {
 				ASYNC_LATCH::countDown);
 	}
 
-	private void consumeMonoError(WebClient annotationClient) {
+	private void findStudentError(WebClient webClient) {
 		LOGGER.info("Invoking mono endpoint with invalid id");
-		Mono<Student> studentMono = annotationClient.get()
+		Mono<Student> studentMono = webClient.get()
 				.uri("/students/{id}", 10)
 				.retrieve()
 				.bodyToMono(Student.class);
+
 		studentMono.subscribe(
 				student -> LOGGER.info("Received student with id {}", student.getId()),
 				exception -> {
@@ -81,19 +86,42 @@ public class ReactiveClient implements CommandLineRunner {
 				ASYNC_LATCH::countDown);
 	}
 
-	private void consumeFlux(WebClient annotationClient) {
+	private void findStudents(WebClient webClient) {
 		LOGGER.info("Invoking flux endpoint");
-		Flux<Student> studentFlux = annotationClient.get()
+		Flux<Student> studentFlux = webClient.get()
 				.uri("/students")
 				.retrieve()
 				.bodyToFlux(Student.class);
-		studentFlux.subscribe(
+
+		studentFlux
+//				.log()
+				.subscribe(
+						student -> LOGGER.info("Received student with id {}", student.getId()),
+						exception -> {
+							LOGGER.error("Exception detected", exception);
+							ASYNC_LATCH.countDown();
+						},
+						ASYNC_LATCH::countDown
+				);
+	}
+
+	private void createStudent(WebClient webClient) {
+		LOGGER.info("Invoking POST endpoint");
+		Mono<Student> studentMono = webClient.post()
+				.uri("/students")
+				.body(BodyInserters.fromValue(Student.builder()
+						.id(4L)
+						.name("Buz")
+						.build()))
+				.retrieve()
+				.bodyToMono(Student.class);
+
+		studentMono.subscribe(
 				student -> LOGGER.info("Received student with id {}", student.getId()),
 				exception -> {
 					LOGGER.error("Exception detected", exception);
 					ASYNC_LATCH.countDown();
 				},
-				ASYNC_LATCH::countDown
-		);
+				ASYNC_LATCH::countDown);
 	}
 }

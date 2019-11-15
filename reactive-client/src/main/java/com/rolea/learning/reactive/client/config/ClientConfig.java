@@ -18,12 +18,16 @@ public class ClientConfig {
 
 	@Bean("annotationClient")
 	public WebClient annotationClient(){
-		return WebClient.create(annotationServerUrl);
+		return WebClient.builder()
+				.baseUrl(annotationServerUrl)
+				.build();
 	}
 
 	@Bean("functionalClient")
 	public WebClient functionalClient(){
-		return WebClient.create(functionalServerUrl);
+		return WebClient.builder()
+				.baseUrl(functionalServerUrl)
+				.build();
 	}
 
 }

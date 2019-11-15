@@ -10,4 +10,6 @@ public interface StudentService {
 
 	Flux<Student> findAll();
 
+	Mono<Student> save(Student student);
+
 }

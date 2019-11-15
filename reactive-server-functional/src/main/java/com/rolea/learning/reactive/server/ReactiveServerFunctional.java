@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ReactiveServer {
+public class ReactiveServerFunctional {
 
 	public static void main(String[] args) {
-		SpringApplication.run(ReactiveServer.class, args);
+		SpringApplication.run(ReactiveServerFunctional.class, args);
 	}
 
 }

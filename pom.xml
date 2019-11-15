@@ -46,10 +46,11 @@
 	</dependencies>
 
 	<modules>
-		<module>reactive-server</module>
 		<module>reactive-client</module>
 		<module>reactive-model</module>
 		<module>reactive-service</module>
+		<module>reactive-server-annotation</module>
+		<module>reactive-server-functional</module>
 	</modules>
 
 </project>

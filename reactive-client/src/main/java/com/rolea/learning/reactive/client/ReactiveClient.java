@@ -13,8 +13,12 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
+import java.util.Comparator;
 import java.util.concurrent.CountDownLatch;
+
+import static java.util.Arrays.asList;
 
 @SpringBootApplication
 public class ReactiveClient implements CommandLineRunner {
@@ -27,7 +31,7 @@ public class ReactiveClient implements CommandLineRunner {
 	@Qualifier("functionalClient")
 	private WebClient functionalClient;
 
-	private static final int ASYNC_PROCESS_COUNT = 8;
+	private static final int ASYNC_PROCESS_COUNT = 9;
 	private static final CountDownLatch ASYNC_LATCH = new CountDownLatch(ASYNC_PROCESS_COUNT);
 	private static final Logger LOGGER = LoggerFactory.getLogger(ReactiveClient.class);
 
@@ -50,6 +54,9 @@ public class ReactiveClient implements CommandLineRunner {
 		findStudentError(functionalClient);
 		createStudent(functionalClient);
 		findStudents(functionalClient);
+
+		LOGGER.info("Testing parallel requests");
+		executeParallelRequests();
 
 		ASYNC_LATCH.await();
 	}
@@ -123,5 +130,53 @@ public class ReactiveClient implements CommandLineRunner {
 					ASYNC_LATCH.countDown();
 				},
 				ASYNC_LATCH::countDown);
+	}
+
+	private void executeParallelRequests() {
+		Flux
+				.fromIterable(asList(1L, 2L, 3L))
+				.parallel()
+				.runOn(Schedulers.elastic())
+				.flatMap(id -> annotationClient.get()
+						.uri("/students/{id}", id)
+						.retrieve()
+						.bodyToMono(Student.class))
+				.ordered(Comparator.comparing(Student::getId))
+				.subscribe(student -> LOGGER.info("Received student with id {}", student.getId()));
+
+		Flux
+				.merge(
+						annotationClient.get()
+								.uri("/students/{id}", 1L)
+								.retrieve()
+								.bodyToMono(Student.class),
+						annotationClient.get()
+								.uri("/students/{id}", 2L)
+								.retrieve()
+								.bodyToMono(Student.class)
+				)
+				.parallel()
+				.runOn(Schedulers.elastic())
+				.ordered(Comparator.comparing(Student::getId))
+				.subscribe(student -> LOGGER.info("Received student with id {}", student.getId()));
+
+		Flux
+				.zip(
+						annotationClient.get()
+								.uri("/students/{id}", 1L)
+								.retrieve()
+								.bodyToMono(Student.class),
+						annotationClient.get()
+								.uri("/students/{id}", 2L)
+								.retrieve()
+								.bodyToMono(Student.class),
+						(firstResult, secondResult) -> {
+							// do something else with the results
+							return asList(firstResult.getId(), secondResult.getId());
+						}
+				).subscribe(ids -> LOGGER.info("Received ids {}", ids));
+
+		//assume consumption does not fail
+		ASYNC_LATCH.countDown();
 	}
 }

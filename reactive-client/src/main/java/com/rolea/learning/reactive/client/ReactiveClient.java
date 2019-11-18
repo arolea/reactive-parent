@@ -44,19 +44,19 @@ public class ReactiveClient implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 		LOGGER.info("Consuming annotation server");
-		findStudentSuccess(annotationClient);
-		findStudentError(annotationClient);
-		createStudent(annotationClient);
+//		findStudentSuccess(annotationClient);
+//		findStudentError(annotationClient);
+//		createStudent(annotationClient);
 		findStudents(annotationClient);
 
-		LOGGER.info("Consuming functional server");
-		findStudentSuccess(functionalClient);
-		findStudentError(functionalClient);
-		createStudent(functionalClient);
-		findStudents(functionalClient);
-
-		LOGGER.info("Testing parallel requests");
-		executeParallelRequests();
+//		LOGGER.info("Consuming functional server");
+//		findStudentSuccess(functionalClient);
+//		findStudentError(functionalClient);
+//		createStudent(functionalClient);
+//		findStudents(functionalClient);
+//
+//		LOGGER.info("Testing parallel requests");
+//		executeParallelRequests();
 
 		ASYNC_LATCH.await();
 	}

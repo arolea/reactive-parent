@@ -27,14 +27,6 @@ public class StudentRouterTest {
 	}
 
 	@Test
-	public void getStudent_error() {
-		webTestClient.get()
-				.uri("/students/{id}", 10)
-				.exchange().expectStatus().isNotFound()
-				.expectBody(String.class).isEqualTo("Student with id 10 does not exist");
-	}
-
-	@Test
 	public void getStudents_ok() {
 		webTestClient.get()
 				.uri("/students")

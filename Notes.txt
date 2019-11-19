@@ -1,0 +1,14 @@
+Reactive programming model implies async communication between the publisher and the subscriber,
+with the subscriber subscribing to a stream of events and getting notified each time the publisher fires an event.
+Backpressure represents the process with which the subscriber is able to control the rate
+with which the publisher fires events (in order to avoid overflows on the subscriber side).
+
+The main abstractions are Mono (0-1) and Flux (0-N).
+
+Reactive and non-blocking generally do not make applications run faster.
+The key expected benefit of reactive and non-blocking is the ability to scale with a small,
+fixed number of threads and less memory.
+
+In Spring MVC, it is assumed that applications can block the current thread, so servlet containers use a large
+thread pool to absorb potential blocking during request handling. In Spring WebFlux, it is assumed that applications
+do not block, so a small fixed-size thread pool can be used instead.
